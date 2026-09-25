@@ -1,0 +1,644 @@
+/* たした — スタイル */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0b12;
+  --bg-elevated: #121219;
+  --surface: #1c1c27;
+  --surface-2: #24242f;
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #f5f5f7;
+  --text-muted: #9a9aa6;
+  --accent: #0a84ff;
+  --accent-2: #6e6bf4;
+  --kind-did: #30d158;
+  --kind-task: #ff9f0a;
+  --kind-idea: #bf5af2;
+  --stack-color: #64d2ff;
+  --danger: #ff453a;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --bg: #f2f2f7;
+    --bg-elevated: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f2f2f7;
+    --border: rgba(0, 0, 0, 0.08);
+    --text: #1c1c1e;
+    --text-muted: #6e6e73;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 720px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ヘッダー */
+header.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(12px + var(--safe-top)) 16px 8px;
+  flex-shrink: 0;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.brand-tagline {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.icon-btn {
+  appearance: none;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  width: 40px;
+  height: 40px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+/* タブ */
+nav.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.tab-btn.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.tab-btn:focus-visible,
+.icon-btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 本文 */
+main.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 14px 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.day-group-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin: 18px 4px 8px;
+  letter-spacing: 0.02em;
+}
+
+.day-group-title:first-child {
+  margin-top: 4px;
+}
+
+.cat-group {
+  margin-bottom: 22px;
+}
+
+.cat-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 4px 8px;
+}
+
+.cat-group-header h2 {
+  font-size: 15px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.copy-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 30px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 12px 10px;
+  margin-bottom: 8px;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.chip-kind-did {
+  background: color-mix(in srgb, var(--kind-did) 22%, transparent);
+  color: var(--kind-did);
+}
+
+.chip-kind-task {
+  background: color-mix(in srgb, var(--kind-task) 22%, transparent);
+  color: var(--kind-task);
+}
+
+.chip-kind-idea {
+  background: color-mix(in srgb, var(--kind-idea) 22%, transparent);
+  color: var(--kind-idea);
+}
+
+.chip-cat {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.chip-stacked {
+  background: color-mix(in srgb, var(--stack-color) 20%, transparent);
+  color: var(--stack-color);
+}
+
+.card-time {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.card-text {
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 2px 0 8px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.card-actions button {
+  appearance: none;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 32px;
+}
+
+.card-actions button.danger {
+  color: var(--danger);
+}
+
+.card-actions button.on {
+  color: var(--stack-color);
+  background: color-mix(in srgb, var(--stack-color) 16%, var(--surface-2));
+}
+
+/* 空状態 */
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 60px 20px;
+  line-height: 1.7;
+}
+
+/* 入力フッター */
+footer.composer {
+  flex-shrink: 0;
+  padding: 8px 12px calc(10px + var(--safe-bottom));
+  background: linear-gradient(180deg, transparent, var(--bg) 24%);
+  border-top: 1px solid var(--border);
+}
+
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px 6px 6px 14px;
+}
+
+#composer-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  resize: none;
+  max-height: 140px;
+  min-height: 24px;
+  padding: 8px 0;
+  font-family: inherit;
+}
+
+#composer-input:focus {
+  outline: none;
+}
+
+#composer-input::placeholder {
+  color: var(--text-muted);
+}
+
+.send-btn,
+.mic-btn {
+  appearance: none;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.send-btn {
+  background: var(--accent);
+  color: #fff;
+}
+
+.send-btn:disabled {
+  opacity: 0.35;
+}
+
+.send-btn:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.mic-btn {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.mic-btn.recording {
+  color: var(--danger);
+}
+
+/* トースト */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + var(--safe-bottom));
+  transform: translateX(-50%) translateY(8px);
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 60;
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+#toast button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* 更新バナー */
+#update-banner {
+  position: fixed;
+  top: calc(10px + var(--safe-top));
+  left: 50%;
+  transform: translateX(-50%) translateY(-140%);
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 70;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.25s ease;
+}
+
+#update-banner.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+#update-banner button {
+  appearance: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* モーダル(設定) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 80;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-sheet {
+  background: var(--bg-elevated);
+  width: 100%;
+  max-width: 720px;
+  border-radius: 20px 20px 0 0;
+  padding: 18px 18px calc(20px + var(--safe-bottom));
+  max-height: 82vh;
+  overflow-y: auto;
+  transform: translateY(12px);
+  transition: transform 0.2s ease;
+}
+
+.modal-overlay.show .modal-sheet {
+  transform: translateY(0);
+}
+
+.modal-sheet h2 {
+  margin: 4px 0 16px;
+  font-size: 17px;
+}
+
+.modal-section {
+  margin-bottom: 20px;
+}
+
+.modal-section h3 {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.modal-row:last-child {
+  border-bottom: none;
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 44px;
+  border: 1px solid var(--border);
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.btn.danger {
+  color: var(--danger);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+}
+
+.import-mode {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.import-mode label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.import-mode input {
+  margin: 0;
+}
+
+.close-modal {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+}
+
+.modal-sheet {
+  position: relative;
+}
+
+.install-hint {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(154px + var(--safe-bottom));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 55;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.install-hint button.dismiss {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 18px;
+  padding: 4px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+@media (max-width: 380px) {
+  .brand-tagline {
+    display: none;
+  }
+}
+
+@media (orientation: landscape) {
+  #app {
+    max-width: 900px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
