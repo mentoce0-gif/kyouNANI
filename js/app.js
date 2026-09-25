@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "0.3.1";
+  const APP_VERSION = "0.3.2";
   const STORAGE_KEY = "tashita-progress-v1";
   const LAST_BACKUP_KEY = "tashita-last-backup-at";
   const INSTALL_HINT_KEY = "tashita-install-hint-dismissed";
@@ -617,10 +617,24 @@
     } catch (e) {
       /* noop */
     }
-    if (dismissed) return;
+    const standalone =
+      window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    if (dismissed || standalone) return;
 
     const hint = document.getElementById("install-hint");
     let deferredPrompt = null;
+
+    // iOSはbeforeinstallpromptが無く、アプリ側から追加を実行できないため手順を案内する
+    const isIOS =
+      /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      document.getElementById("install-hint-text").textContent =
+        "共有ボタン(□↑)から「ホーム画面に追加」でアプリとして使えます。";
+      hint.querySelector(".install-action").hidden = true;
+      hint.hidden = false;
+    }
 
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
