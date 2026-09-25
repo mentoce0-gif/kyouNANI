@@ -1,6 +1,6 @@
 /* たした — Service Worker */
 
-const CACHE_NAME = "tashita-v4";
+const CACHE_NAME = "tashita-v5";
 
 const SHELL_FILES = [
   "./",
@@ -18,7 +18,10 @@ const SHELL_FILES = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES))
+    // GitHub PagesのHTTPキャッシュ(max-age=600)越しに古いファイルを取り込まないよう必ず取り直す
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(SHELL_FILES.map((url) => new Request(url, { cache: "reload" }))))
   );
 });
 
