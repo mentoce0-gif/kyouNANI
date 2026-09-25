@@ -1,4 +1,6 @@
-/* たした — 「私のあゆみ」ヒーロービジュアル(素のWebGL、外部ライブラリ不使用) */
+/* たした — 「私のあゆみ」ヒーロービジュアル(素のWebGL、外部ライブラリ不使用)
+   球面上を編むように巡る光の糸。周期のずれた揺らぎを重ねて同じ姿に戻らないようにし、
+   蓄積時間(progress)に応じて糸が一本ずつ太り、発光が強まる。 */
 window.TashitaScene = (() => {
   "use strict";
 
@@ -43,101 +45,100 @@ window.TashitaScene = (() => {
     return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]);
   }
 
-  /* ---- 三葉結び目(トーラスノット)のチューブ形状を生成 ---- */
-  function buildKnotGeometry(opts) {
-    opts = opts || {};
-    const segments = opts.segments || 220;
-    const radialSegments = opts.radialSegments || 20;
-    const tubeRadius = opts.tubeRadius || 0.32;
-    const scale = opts.scale || 0.42;
+  /* ---- 光の糸の形状 ---- */
+  const STRANDS = [
+    { n: 2, k: 3 },
+    { n: 3, k: 5 },
+    { n: 2, k: 5 },
+    { n: 3, k: 4 },
+    { n: 1, k: 3 },
+  ];
+  const SEGMENTS = 280;
+  const RADIAL = 10;
+  const TUBE = 0.055;
 
-    function centerline(t, out) {
-      out[0] = Math.sin(t) + 2 * Math.sin(2 * t);
-      out[1] = Math.cos(t) - 2 * Math.cos(2 * t);
-      out[2] = -Math.sin(3 * t);
-      out[0] *= scale;
-      out[1] *= scale;
-      out[2] *= scale;
-    }
-
-    const centers = [];
-    for (let i = 0; i < segments; i++) {
-      const t = (i / segments) * Math.PI * 2;
-      const p = [0, 0, 0];
-      centerline(t, p);
-      centers.push(p);
-    }
-
-    const normalsN = [];
-    const binormals = [];
-    const EPS = 1e-4;
-    let prevN = [0, 1, 0];
-    for (let i = 0; i < segments; i++) {
-      const t = (i / segments) * Math.PI * 2;
-      const p1 = centers[i];
-      const p2 = [0, 0, 0];
-      centerline(t + EPS, p2);
-      const tangent = normalize(sub(p2, p1));
-      let n;
-      if (i === 0) {
-        let up = [0, 1, 0];
-        if (Math.abs(dot(up, tangent)) > 0.99) up = [1, 0, 0];
-        n = normalize(cross(up, tangent));
-      } else {
-        const b_prev = normalize(cross(tangent, prevN));
-        n = normalize(cross(b_prev, tangent));
-      }
-      const b = normalize(cross(tangent, n));
-      normalsN.push(n);
-      binormals.push(b);
-      prevN = n;
-    }
-
-    const positions = [];
-    const normals = [];
-    for (let i = 0; i < segments; i++) {
-      const c = centers[i];
-      const n = normalsN[i];
-      const b = binormals[i];
-      for (let j = 0; j < radialSegments; j++) {
-        const angle = (j / radialSegments) * Math.PI * 2;
-        const ca = Math.cos(angle), sa = Math.sin(angle);
-        const rx = ca * n[0] + sa * b[0];
-        const ry = ca * n[1] + sa * b[1];
-        const rz = ca * n[2] + sa * b[2];
-        positions.push(c[0] + tubeRadius * rx, c[1] + tubeRadius * ry, c[2] + tubeRadius * rz);
-        normals.push(rx, ry, rz);
-      }
-    }
-
-    const indices = [];
-    for (let i = 0; i < segments; i++) {
-      const iNext = (i + 1) % segments;
-      for (let j = 0; j < radialSegments; j++) {
-        const jNext = (j + 1) % radialSegments;
-        const a = i * radialSegments + j;
-        const b2 = i * radialSegments + jNext;
-        const c2 = iNext * radialSegments + j;
-        const d = iNext * radialSegments + jNext;
-        indices.push(a, c2, b2, b2, c2, d);
-      }
-    }
-
-    return {
-      positions: new Float32Array(positions),
-      normals: new Float32Array(normals),
-      indices: new Uint16Array(indices),
-    };
+  // 閉曲線: 経度は n 周、緯度は k 回うねる。位相・振幅・半径が時間 tau でゆっくり漂う
+  function strandPoint(s, t, tau, out) {
+    const { n, k } = STRANDS[s];
+    const amp = 0.78 + 0.26 * Math.sin(0.17 * tau + 1.3 * s);
+    const phase = tau * (0.21 + 0.047 * s) + s * 1.7;
+    const lon = n * t + (s * Math.PI * 2) / STRANDS.length + 0.05 * tau;
+    const lat = amp * Math.sin(k * t + phase);
+    const r = 1 + 0.06 * Math.sin(2 * t + 0.41 * tau + s);
+    const cl = Math.cos(lat);
+    out[0] = r * cl * Math.cos(lon);
+    out[1] = r * Math.sin(lat);
+    out[2] = r * cl * Math.sin(lon);
   }
 
-  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
-  function cross(a, b) {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  }
-  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
-  function normalize(v) {
-    const len = Math.sqrt(dot(v, v)) || 1;
-    return [v[0] / len, v[1] / len, v[2] / len];
+  function createGeometry() {
+    const vertsPerStrand = SEGMENTS * RADIAL;
+    const total = vertsPerStrand * STRANDS.length;
+    const positions = new Float32Array(total * 3);
+    const normals = new Float32Array(total * 3);
+    const indices = new Uint16Array(STRANDS.length * SEGMENTS * RADIAL * 6);
+    let w = 0;
+    for (let s = 0; s < STRANDS.length; s++) {
+      const base = s * vertsPerStrand;
+      for (let i = 0; i < SEGMENTS; i++) {
+        const i2 = (i + 1) % SEGMENTS;
+        for (let j = 0; j < RADIAL; j++) {
+          const j2 = (j + 1) % RADIAL;
+          const a = base + i * RADIAL + j, b = base + i * RADIAL + j2;
+          const c = base + i2 * RADIAL + j, d = base + i2 * RADIAL + j2;
+          indices[w++] = a; indices[w++] = c; indices[w++] = b;
+          indices[w++] = b; indices[w++] = c; indices[w++] = d;
+        }
+      }
+    }
+    const ringCos = new Float32Array(RADIAL), ringSin = new Float32Array(RADIAL);
+    for (let j = 0; j < RADIAL; j++) {
+      ringCos[j] = Math.cos((j / RADIAL) * Math.PI * 2);
+      ringSin[j] = Math.sin((j / RADIAL) * Math.PI * 2);
+    }
+
+    const p = [0, 0, 0], pa = [0, 0, 0], pb = [0, 0, 0];
+    const EPS = 1e-3;
+
+    // progress が増えると糸が一本ずつ太る(最初の一本は常に見える)
+    function update(tau, progress) {
+      let v = 0;
+      for (let s = 0; s < STRANDS.length; s++) {
+        const grow = Math.max(0, Math.min(1, progress * STRANDS.length - s + 1));
+        const tube = TUBE * (s === 0 ? 1 : 0.12 + 0.88 * grow);
+        for (let i = 0; i < SEGMENTS; i++) {
+          const t = (i / SEGMENTS) * Math.PI * 2;
+          strandPoint(s, t, tau, p);
+          strandPoint(s, t + EPS, tau, pa);
+          strandPoint(s, t - EPS, tau, pb);
+          let tx = pa[0] - pb[0], ty = pa[1] - pb[1], tz = pa[2] - pb[2];
+          let tl = Math.hypot(tx, ty, tz) || 1;
+          tx /= tl; ty /= tl; tz /= tl;
+          // 球の法線方向を接線に直交化すると、継ぎ目のない周期的な断面フレームになる
+          let rl = Math.hypot(p[0], p[1], p[2]) || 1;
+          let nx = p[0] / rl, ny = p[1] / rl, nz = p[2] / rl;
+          const d = nx * tx + ny * ty + nz * tz;
+          nx -= d * tx; ny -= d * ty; nz -= d * tz;
+          const nl = Math.hypot(nx, ny, nz) || 1;
+          nx /= nl; ny /= nl; nz /= nl;
+          const bx = ty * nz - tz * ny, by = tz * nx - tx * nz, bz = tx * ny - ty * nx;
+          for (let j = 0; j < RADIAL; j++) {
+            const rx = ringCos[j] * nx + ringSin[j] * bx;
+            const ry = ringCos[j] * ny + ringSin[j] * by;
+            const rz = ringCos[j] * nz + ringSin[j] * bz;
+            positions[v] = p[0] + tube * rx;
+            positions[v + 1] = p[1] + tube * ry;
+            positions[v + 2] = p[2] + tube * rz;
+            normals[v] = rx;
+            normals[v + 1] = ry;
+            normals[v + 2] = rz;
+            v += 3;
+          }
+        }
+      }
+    }
+
+    return { positions, normals, indices, update };
   }
 
   const VERT_SRC = `
@@ -172,18 +173,21 @@ window.TashitaScene = (() => {
       vec3 H = normalize(L + V);
       float diff = max(dot(N, L), 0.0);
       float spec = pow(max(dot(N, H), 0.0), 44.0);
-      float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.4);
+      float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.0);
 
       vec3 baseColor = mix(uColorLow, uColorHigh, uProgress);
-      float shimmer = 0.5 + 0.5 * sin(uTime * 0.6 + vWorldPos.x * 2.2 + vWorldPos.y * 1.8);
-      vec3 glowColor = mix(vec3(0.45, 0.62, 1.0), vec3(0.82, 0.5, 1.0), shimmer);
+      float shimmer = 0.5 + 0.5 * sin(uTime * 0.5 + vWorldPos.x * 2.4 + vWorldPos.y * 1.9 + vWorldPos.z);
+      vec3 glowColor = mix(vec3(0.45, 0.66, 1.0), vec3(0.9, 0.52, 1.0), shimmer);
 
-      vec3 ambient = baseColor * 0.38;
-      vec3 diffuse = baseColor * diff * 0.6;
-      vec3 specular = vec3(1.0) * spec * (0.25 + 0.55 * uProgress);
-      vec3 rim = glowColor * fresnel * (0.2 + 0.95 * uProgress);
+      // 奥の糸ほど沈ませて奥行きを出す
+      float depth = clamp(0.62 + 0.38 * vWorldPos.z, 0.25, 1.0);
 
-      vec3 color = ambient + diffuse + specular + rim;
+      vec3 ambient = baseColor * 0.36;
+      vec3 diffuse = baseColor * diff * 0.55;
+      vec3 specular = vec3(1.0) * spec * (0.3 + 0.6 * uProgress);
+      vec3 rim = glowColor * fresnel * (0.3 + 1.1 * uProgress);
+
+      vec3 color = (ambient + diffuse + rim) * depth + specular;
       gl_FragColor = vec4(color, 1.0);
     }
   `;
@@ -219,14 +223,23 @@ window.TashitaScene = (() => {
       return null;
     }
 
-    const geo = buildKnotGeometry({});
+    let progress = options.initialProgress || 0;
+    let paused = !!options.initialPaused;
+    // 起動ごとに違う姿から始める
+    let tau = options.initialTau !== undefined ? options.initialTau : Math.random() * 1000;
+    let rotY = 0;
+    let dirty = true;
+
+    const geo = createGeometry();
+    geo.update(tau, progress);
+
     const posBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, geo.positions, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, geo.positions, gl.DYNAMIC_DRAW);
 
     const normBuf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
-    gl.bufferData(gl.ARRAY_BUFFER, geo.normals, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, geo.normals, gl.DYNAMIC_DRAW);
 
     const idxBuf = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, idxBuf);
@@ -248,9 +261,6 @@ window.TashitaScene = (() => {
     gl.cullFace(gl.BACK);
 
     const camDist = 4.4;
-    let progress = options.initialProgress || 0;
-    let paused = !!options.initialPaused;
-    let rotY = 0;
     let lastTs = null;
     let rafId = null;
     let destroyed = false;
@@ -268,16 +278,25 @@ window.TashitaScene = (() => {
       gl.viewport(0, 0, canvas.width, canvas.height);
     }
 
-    function render(timeSec) {
+    function render() {
       resize();
+      if (dirty) {
+        geo.update(tau, progress);
+        gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, geo.positions);
+        gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, geo.normals);
+        dirty = false;
+      }
+
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       const aspect = canvas.width / canvas.height || 1;
       const proj = m4perspective((40 * Math.PI) / 180, aspect, 0.1, 100);
       const view = m4translate(0, 0, -camDist);
-      const rotX = 0.18 * Math.sin(timeSec * 0.18);
-      const model = m4multiply(m4rotateY(rotY), m4rotateX(rotX));
+      const rotX = 0.35 + 0.15 * Math.sin(tau * 0.11);
+      const model = m4multiply(m4rotateX(rotX), m4rotateY(rotY));
       const mvp = m4multiply(m4multiply(proj, view), model);
 
       gl.useProgram(program);
@@ -296,22 +315,25 @@ window.TashitaScene = (() => {
       gl.uniformMatrix4fv(uModel, false, model);
       gl.uniform3f(uLightDir, 0.4, 0.85, 0.6);
       gl.uniform3f(uCamPos, 0, 0, camDist);
-      gl.uniform3f(uColorLow, 0.5, 0.52, 0.56);
-      gl.uniform3f(uColorHigh, 0.72, 0.68, 0.95);
+      gl.uniform3f(uColorLow, 0.5, 0.52, 0.58);
+      gl.uniform3f(uColorHigh, 0.74, 0.7, 0.98);
       gl.uniform1f(uProgress, progress);
-      gl.uniform1f(uTime, timeSec);
+      gl.uniform1f(uTime, tau);
 
       gl.drawElements(gl.TRIANGLES, geo.indices.length, gl.UNSIGNED_SHORT, 0);
     }
 
     function frame(ts) {
       if (destroyed) return;
-      const timeSec = ts / 1000;
       if (lastTs === null) lastTs = ts;
-      const dt = (ts - lastTs) / 1000;
+      const dt = Math.min((ts - lastTs) / 1000, 0.1);
       lastTs = ts;
-      if (!paused && !document.hidden) rotY += dt * 0.28;
-      render(timeSec);
+      if (!paused && !document.hidden) {
+        tau += dt;
+        rotY += dt * 0.12;
+        dirty = true;
+      }
+      render();
       rafId = requestAnimationFrame(frame);
     }
 
@@ -321,6 +343,7 @@ window.TashitaScene = (() => {
     return {
       setProgress(p) {
         progress = Math.max(0, Math.min(1, p));
+        dirty = true;
       },
       setPaused(v) {
         paused = !!v;
