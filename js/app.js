@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "0.3.2";
+  const APP_VERSION = "0.3.3";
   const STORAGE_KEY = "tashita-progress-v1";
   const LAST_BACKUP_KEY = "tashita-last-backup-at";
   const INSTALL_HINT_KEY = "tashita-install-hint-dismissed";
@@ -573,12 +573,17 @@
 
   /* ---------- Service Worker & 更新通知 ---------- */
 
+  const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+
   function initServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     window.addEventListener("load", () => {
       navigator.serviceWorker
-        .register("./sw.js")
+        .register("./sw.js", { updateViaCache: "none" })
         .then((reg) => {
+          // 前回の起動中に取り込まれ、待機したままの新版もここで拾う
+          if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg);
+
           reg.addEventListener("updatefound", () => {
             const newWorker = reg.installing;
             if (!newWorker) return;
@@ -588,23 +593,42 @@
               }
             });
           });
+
+          // iOSのホーム画面アプリは再読み込みされずに復帰するため、前面に戻るたびに確認する
+          let lastCheck = Date.now();
+          const check = () => {
+            lastCheck = Date.now();
+            reg.update().catch(() => {});
+          };
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && Date.now() - lastCheck > 60 * 1000) check();
+          });
+          setInterval(check, UPDATE_CHECK_INTERVAL_MS);
         })
         .catch((e) => console.error("SW登録失敗", e));
 
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
+      navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
     });
+  }
+
+  let refreshing = false;
+  function reloadOnce() {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
   }
 
   function showUpdateBanner(reg) {
     const banner = document.getElementById("update-banner");
     banner.classList.add("show");
     document.getElementById("update-reload-btn").onclick = () => {
-      if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        // controllerchange が届かない環境向けの保険
+        setTimeout(reloadOnce, 3000);
+      } else {
+        reloadOnce();
+      }
     };
   }
 

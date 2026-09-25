@@ -439,11 +439,15 @@ main.content {
 }
 
 /* 更新バナー */
+/* 画面上部はiOSのステータスバーがタップを奪うため下部に出す */
 #update-banner {
   position: fixed;
-  top: calc(10px + var(--safe-top));
+  bottom: calc(96px + var(--safe-bottom));
   left: 50%;
-  transform: translateX(-50%) translateY(-140%);
+  transform: translateX(-50%) translateY(16px);
+  opacity: 0;
+  visibility: hidden;
+  white-space: nowrap;
   background: var(--accent);
   color: #fff;
   padding: 10px 14px;
@@ -454,11 +458,13 @@ main.content {
   gap: 10px;
   z-index: 70;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.25s ease;
+  transition: transform 0.25s ease, opacity 0.25s ease, visibility 0.25s;
 }
 
 #update-banner.show {
   transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
 #update-banner button {
