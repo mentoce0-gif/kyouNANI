@@ -1,6 +1,6 @@
 /* たした — Service Worker */
 
-const CACHE_NAME = "tashita-v1";
+const CACHE_NAME = "tashita-v2";
 
 const SHELL_FILES = [
   "./",
@@ -8,6 +8,7 @@ const SHELL_FILES = [
   "./manifest.json",
   "./css/style.css",
   "./js/app.js",
+  "./js/scene.js",
   "./icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
