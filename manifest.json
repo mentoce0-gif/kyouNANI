@@ -1,7 +1,7 @@
 {
   "name": "たした",
   "short_name": "たした",
-  "description": "話したこと・やったことを、ぽいっと投げるだけで残す個人用ノート",
+  "description": "積み重ねた時間が、かたちになる。個人用の「あゆみ」ポートレート",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

@@ -1,6 +1,6 @@
 /* たした — Service Worker */
 
-const CACHE_NAME = "tashita-v5";
+const CACHE_NAME = "tashita-v6";
 
 const SHELL_FILES = [
   "./",

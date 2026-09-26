@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const APP_VERSION = "0.3.3";
+  const APP_VERSION = "0.3.4";
   const STORAGE_KEY = "tashita-progress-v1";
   const LAST_BACKUP_KEY = "tashita-last-backup-at";
   const INSTALL_HINT_KEY = "tashita-install-hint-dismissed";
